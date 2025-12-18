@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理后台 - 祝福墙</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f8fafc;
+            color: #1a202c;
+        }
+        
+        .auth-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .auth-box {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        .auth-box h1 {
+            margin-bottom: 10px;
+            color: #2d3748;
+        }
+        
+        .auth-box p {
+            color: #718096;
+            margin-bottom: 30px;
+        }
+        
+        .password-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .admin-content {
+            display: none;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            color: white;
+            padding: 25px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .container {
+            display: flex;
+            min-height: calc(100vh - 80px);
+        }
+        
+        .sidebar {
+            width: 300px;
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            padding: 25px;
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 25px;
+            overflow: auto;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+        
+        .stat-card h3 {
+            font-size: 14px;
+            color: #718096;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .stat-card .number {
+            font-size: 36px;
+            font-weight: bold;
+            color: #2d3748;
+        }
+        
+        .tab-nav {
+            display: flex;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 25px;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 18px;
+            border: none;
+            background: none;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #718096;
+            transition: all 0.3s;
+        }
+        
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .blessing-list {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .blessing-item {
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .blessing-item:hover {
+            background: #f8fafc;
+        }
+        
+        .blessing-content {
+            flex: 1;
+        }
+        
+        .blessing-text {
+            font-size: 16px;
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+        
+        .blessing-meta {
+            font-size: 13px;
+            color: #718096;
+        }
+        
+        .blessing-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-approve {
+            background: #48bb78;
+            color: white;
+        }
+        
+        .btn-reject {
+            background: #f56565;
+            color: white;
+        }
+        
+        .btn-delete {
+            background: #ed8936;
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        
+        .status-pending {
+            background: #feebc8;
+            color: #c05621;
+        }
+        
+        .status-approved {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        
+        .status-rejected {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #a0aec0;
+        }
+        
+        .control-group {
+            margin-bottom: 20px;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            margin: 10px 0;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        
+        .action-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- 密码验证界面 -->
+    <div class="auth-screen" id="auth-screen">
+        <div class="auth-box">
+            <h1>🔐 管理员登录</h1>
+            <p>请输入管理员密码以访问控制面板</p>
+            <input type="password" id="password-input" class="password-input" placeholder="输入管理员密码">
+            <button class="btn btn-primary action-btn" onclick="checkPassword()">进入管理后台</button>
+            <p style="margin-top: 20px; font-size: 14px; color: #a0aec0;">
+                忘记密码？请联系系统管理员
+            </p>
+        </div>
+    </div>
+    
+    <!-- 管理界面 -->
+    <div class="admin-content" id="admin-content">
+        <div class="header">
+            <h1><span>⚙️</span> 祝福墙管理后台</h1>
+            <div style="display: flex; gap: 15px;">
+                <button class="btn" onclick="location.href='display.html'">🎬 查看大屏</button>
+                <button class="btn" onclick="location.href='index.html'">📝 用户提交</button>
+                <button class="btn btn-danger" onclick="logout()">🚪 退出</button>
+            </div>
+        </div>
+        
+        <div class="container">
+            <div class="sidebar">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>总祝福数</h3>
+                        <div class="number" id="stat-total">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>待审核</h3>
+                        <div class="number" id="stat-pending">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>已通过</h3>
+                        <div class="number" id="stat-approved">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>已拒绝</h3>
+                        <div class="number" id="stat-rejected">0</div>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3 style="margin-bottom: 15px;">🎮 弹幕控制</h3>
+                    <label>弹幕密度: <span id="density-value">50%</span></label>
+                    <input type="range" id="density" min="10" max="100" value="50" oninput="updateDensity()">
+                    
+                    <label>弹幕速度: <span id="speed-value">中速</span></label>
+                    <input type="range" id="speed" min="5" max="20" value="12" oninput="updateSpeed()">
+                    
+                    <button class="btn btn-primary action-btn" onclick="saveSettings()">💾 保存设置</button>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="action-btn btn-primary" onclick="approveAll()">✅ 一键通过所有</button>
+                    <button class="action-btn btn-danger" onclick="deleteAllRejected()">🗑️ 清空已拒绝</button>
+                </div>
+                
+                <div style="margin-top: 30px;">
+                    <button class="action-btn" onclick="exportData()">📥 导出数据</button>
+                    <button class="action-btn" onclick="importData()">📤 导入数据</button>
+                </div>
+            </div>
+            
+            <div class="main-content">
+                <div class="tab-nav">
+                    <button class="tab-btn active" onclick="switchTab('pending')">⏳ 待审核 (<span id="pending-count">0</span>)</button>
+                    <button class="tab-btn" onclick="switchTab('approved')">✅ 已通过 (<span id="approved-count">0</span>)</button>
+                    <button class="tab-btn" onclick="switchTab('rejected')">❌ 已拒绝 (<span id="rejected-count">0</span>)</button>
+                    <button class="tab-btn" onclick="switchTab('all')">📋 全部祝福</button>
+                </div>
+                
+                <div class="tab-content active" id="tab-pending">
+                    <div class="blessing-list" id="pending-list">
+                        <!-- 待审核列表由JS生成 -->
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="tab-approved">
+                    <div class="blessing-list" id="approved-list">
+                        <!-- 已通过列表由JS生成 -->
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="tab-rejected">
+                    <div class="blessing-list" id="rejected-list">
+                        <!-- 已拒绝列表由JS生成 -->
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="tab-all">
+                    <div class="blessing-list" id="all-list">
+                        <!-- 全部列表由JS生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 配置
+        const CONFIG = {
+            STORAGE_KEY: 'blessings_wall',
+            ADMIN_PASSWORD: 'admin123', // 默认密码，请修改！
+            PASSWORD_KEY: 'admin_password_2025'
+        };
+        
+        // 状态
+        let state = {
+            data: { blessings: [], settings: {} },
+            currentTab: 'pending'
+        };
+        
+        // 检查密码
+        function checkPassword() {
+            const input = document.getElementById('password-input').value;
+            const savedPassword = localStorage.getItem(CONFIG.PASSWORD_KEY) || CONFIG.ADMIN_PASSWORD;
+            
+            if (input === savedPassword) {
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('admin-content').style.display = 'block';
+                initAdmin();
+            } else {
+                alert('密码错误！');
+                document.getElementById('password-input').value = '';
+                document.getElementById('password-input').focus();
+            }
+        }
+        
+        // 初始化管理员界面
+        function initAdmin() {
+            loadData();
+            updateStats();
+            renderTab('pending');
+            setupEventListeners();
+        }
+        
+        // 加载数据
+        function loadData() {
+            const stored = localStorage.getItem(CONFIG.STORAGE_KEY);
+            state.data = stored ? JSON.parse(stored) : { blessings: [], settings: {} };
+        }
+        
+        // 保存数据
+        function saveData() {
+            localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(state.data));
+            window.dispatchEvent(new Event('storage'));
+            updateStats();
+        }
+        
+        // 更新统计
+        function updateStats() {
+            const blessings = state.data.blessings || [];
+            
+            const total = blessings.length;
+            const pending = blessings.filter(b => b.status === 'pending').length;
+            const approved = blessings.filter(b => b.status === 'approved').length;
+            const rejected = blessings.filter(b => b.status === 'rejected').length;
+            
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-pending').textContent = pending;
+            document.getElementById('stat-approved').textContent = approved;
+            document.getElementById('stat-rejected').textContent = rejected;
+            
+            document.getElementById('pending-count').textContent = pending;
+            document.getElementById('approved-count').textContent = approved;
+            document.getElementById('rejected-count').textContent = rejected;
+        }
+        
+        // 切换标签页
+        function switchTab(tabName) {
+            state.currentTab = tabName;
+            
+            // 更新按钮状态
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // 更新内容
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            
+            renderTab(tabName);
+        }
+        
+        // 渲染标签页内容
+        function renderTab(tabName) {
+            const blessings = state.data.blessings || [];
+            let filtered = [];
+            
+            switch(tabName) {
+                case 'pending':
+                    filtered = blessings.filter(b => b.status === 'pending');
+                    break;
+                case 'approved':
+                    filtered = blessings.filter(b => b.status === 'approved');
+                    break;
+                case 'rejected':
+                    filtered = blessings.filter(b => b.status === 'rejected');
+                    break;
+                case 'all':
+                    filtered = blessings;
+                    break;
+            }
+            
+            const container = document.getElementById(`${tabName}-list`);
+            renderBlessingList(container, filtered, tabName);
+        }
+        
+        // 渲染祝福列表
+        function renderBlessingList(container, blessings, tabName) {
+            container.innerHTML = '';
+            
+            if (blessings.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div style="font-size: 48px; margin-bottom: 20px;">📭</div>
+                        <h3>暂无数据</h3>
+                        <p>这里还没有祝福</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            blessings.forEach(blessing => {
+                const item = document.createElement('div');
+                item.className = 'blessing-item';
+                item.id = `blessing-${blessing.id}`;
+                
+                const statusClass = `status-${blessing.status}`;
+                const statusText = blessing.status === 'pending' ? '待审核' : 
+                                  blessing.status === 'approved' ? '已通过' : '已拒绝';
+                
+                item.innerHTML = `
+                    <div class="blessing-content">
+                        <div class="blessing-text" style="color: ${blessing.color}">
+                            ${blessing.text}
+                        </div>
+                        <div class="blessing-meta">
+                            <span>👤 ${blessing.username}</span>
+                            <span style="margin-left: 15px;">🕐 ${blessing.time}</span>
+                            <span class="status-badge ${statusClass}">${statusText}</span>
+                        </div>
+                    </div>
+                    <div class="blessing-actions">
+                        ${tabName === 'pending' ? `
+                            <button class="btn btn-approve" onclick="approveBlessing('${blessing.id}')">通过</button>
+                            <button class="btn btn-reject" onclick="rejectBlessing('${blessing.id}')">拒绝</button>
+                        ` : ''}
+                        ${tabName === 'approved' ? `
+                            <button class="btn btn-reject" onclick="rejectBlessing('${blessing.id}')">撤回</button>
+                        ` : ''}
+                        ${tabName === 'rejected' ? `
+                            <button class="btn btn-approve" onclick="approveBlessing('${blessing.id}')">恢复</button>
+                        ` : ''}
+                        <button class="btn btn-delete" onclick="deleteBlessing('${blessing.id}')">删除</button>
+                    </div>
+                `;
+                
+                container.appendChild(item);
+            });
+        }
+        
+        // 审批祝福
+        function approveBlessing(id) {
+            const blessing = state.data.blessings.find(b => b.id === id);
+            if (blessing) {
+                blessing.status = 'approved';
+                saveData();
+                renderTab(state.currentTab);
+            }
+        }
+        
+        // 拒绝祝福
+        function rejectBlessing(id) {
+            const blessing = state.data.blessings.find(b => b.id === id);
+            if (blessing) {
+                blessing.status = 'rejected';
+                saveData();
+                renderTab(state.currentTab);
+            }
+        }
+        
+        // 删除祝福
+        function deleteBlessing(id) {
+            if (confirm('确定要删除这条祝福吗？')) {
+                state.data.blessings = state.data.blessings.filter(b => b.id !== id);
+                saveData();
+                renderTab(state.currentTab);
+            }
+        }
+        
+        // 一键通过所有待审核
+        function approveAll() {
+            if (confirm('确定要通过所有待审核的祝福吗？')) {
+                state.data.blessings.forEach(b => {
+                    if (b.status === 'pending') {
+                        b.status = 'approved';
+                    }
+                });
+                saveData();
+                renderTab(state.currentTab);
+            }
+        }
+        
+        // 删除所有已拒绝
+        function deleteAllRejected() {
+            if (confirm('确定要删除所有已拒绝的祝福吗？此操作不可恢复！')) {
+                state.data.blessings = state.data.blessings.filter(b => b.status !== 'rejected');
+                saveData();
+                renderTab(state.currentTab);
+            }
+        }
+        
+        // 更新密度设置
+        function updateDensity() {
+            const value = document.getElementById('density').value;
+            document.getElementById('density-value').textContent = value + '%';
+            if (!state.data.settings) state.data.settings = {};
+            state.data.settings.density = parseInt(value);
+        }
+        
+        // 更新速度设置
+        function updateSpeed() {
+            const value = document.getElementById('speed').value;
+            let text = '慢速';
+            if (value > 8) text = '中速';
+            if (value > 15) text = '快速';
+            
+            document.getElementById('speed-value').textContent = text;
+            if (!state.data.settings) state.data.settings = {};
+            state.data.settings.speed = parseInt(value);
+        }
+        
+        // 保存设置
+        function saveSettings() {
+            saveData();
+            alert('设置已保存并应用到弹幕墙！');
+        }
+        
+        // 导出数据
+        function exportData() {
+            const dataStr = JSON.stringify(state.data, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = `blessings-wall-backup-${new Date().toISOString().split('T')[0]}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+        
+        // 导入数据
+        function importData() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = function() {
+                    try {
+                        const importedData = JSON.parse(reader.result);
+                        if (confirm('确定要导入数据吗？这会覆盖当前所有数据！')) {
+                            state.data = importedData;
+                            saveData();
+                            renderTab(state.currentTab);
+                            alert('数据导入成功！');
+                        }
+                    } catch (error) {
+                        alert('文件格式错误！');
+                    }
+                };
+                
+                reader.readAsText(file);
+            };
+            
+            input.click();
+        }
+        
+        // 退出登录
+        function logout() {
+            if (confirm('确定要退出管理后台吗？')) {
+                document.getElementById('admin-content').style.display = 'none';
+                document.getElementById('auth-screen').style.display = 'flex';
+                document.getElementById('password-input').value = '';
+            }
+        }
+        
+        // 设置事件监听
+        function setupEventListeners() {
+            // 监听storage事件（其他页面的更新）
+            window.addEventListener('storage', () => {
+                loadData();
+                updateStats();
+                renderTab(state.currentTab);
+            });
+            
+            // 加载保存的设置
+            if (state.data.settings) {
+                if (state.data.settings.density) {
+                    document.getElementById('density').value = state.data.settings.density;
+                    updateDensity();
+                }
+                if (state.data.settings.speed) {
+                    document.getElementById('speed').value = state.data.settings.speed;
+                    updateSpeed();
+                }
+            }
+        }
+        
+        // 页面加载时检查URL中的密钥
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const adminKey = urlParams.get('key');
+            const savedPassword = localStorage.getItem(CONFIG.PASSWORD_KEY) || CONFIG.ADMIN_PASSWORD;
+            
+            // 如果URL中有正确的密钥，自动登录
+            if (adminKey === savedPassword) {
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('admin-content').style.display = 'block';
+                initAdmin();
+            } else {
+                // 否则显示登录界面
+                document.getElementById('password-input').focus();
+            }
+            
+            // 设置默认密码（如果是第一次使用）
+            if (!localStorage.getItem(CONFIG.PASSWORD_KEY)) {
+                localStorage.setItem(CONFIG.PASSWORD_KEY, CONFIG.ADMIN_PASSWORD);
+            }
+        };
+    </script>
+</body>
+</html>
